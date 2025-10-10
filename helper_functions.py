@@ -19,6 +19,77 @@ def homogeneous_to_cartesian(v):
 toCart = homogeneous_to_cartesian
 
 
+def transformation_matrix(L, theta, tau):
+    '''To construct the helix, we will assume that the first point B lies at the origin. 
+The first segment goes in the x direction, so C is at $(L,0,0,1)$.
+Further, the joint faces of the first segment are normal to the $xy$-plane, meaning
+$$N_B = (-\cos(\theta/2), \sin(\theta/2), 0, 1)\quad N_C = (\cos(\theta/2), \sin(\theta/2), 0, 1)$$
+which are the normal vectors to the joint faces.
+
+Note that this means that the axis of the helix is not the $z$-axis, and it is in fact not even parallel to it unless the twist angle $\tau$ is 0.
+
+To determine the third point A we do the following:
+
+1. translate C to the origin ($\vec t = (-L, 0, 0), R = \mathbf 1$)
+2. rotate by $-\theta/2$ along the $z$-axis. Now $\vec N_B$ is aligned with the $x$-axis.
+3. rotate by $\tau$ around the $x$-axis.
+4. rotate by $-\theta/2$ around the $z$-axis again. Now the point D would lie where C was before, and B has moved to A.
+
+Doing this transformation to B will give you A, and doing the inverse to C will give you D'''
+    tau_rad = np.deg2rad(tau)
+    theta_rad = np.deg2rad(theta)
+
+    ## translate b to origin
+    T1 = np.array([[1,0,0,-L],
+                    [0,1,0,0],
+                    [0,0,1,0],
+                    [0,0,0,1]])
+
+    ## rotate by -theta/2 around z axis
+    R1 = np.array([[np.cos(-theta_rad/2), -np.sin(-theta_rad/2), 0, 0],
+                    [np.sin(-theta_rad/2), np.cos(-theta_rad/2), 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1]])
+
+    ## rotate by tau around x axis
+    R2 = np.array([[1, 0, 0, 0],
+                    [0, np.cos(tau_rad), -np.sin(tau_rad), 0],
+                    [0, np.sin(tau_rad), np.cos(tau_rad), 0],
+                    [0, 0, 0, 1]])
+
+    ## rotate by -tau around x axis
+    R2_inv = np.array([[1, 0, 0, 0],
+                        [0, np.cos(-tau_rad), -np.sin(-tau_rad), 0],
+                        [0, np.sin(-tau_rad), np.cos(-tau_rad), 0],
+                        [0, 0, 0, 1]])  
+
+    ## rotate by theta/2 around z axis
+    R3 = np.array([[np.cos(theta_rad/2), -np.sin(theta_rad/2), 0, 0],
+                    [np.sin(theta_rad/2), np.cos(theta_rad/2), 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1]])
+
+    ## translate back
+    T2 = np.array([[1,0,0,L],
+                    [0,1,0,0],        
+                    [0,0,1,0],
+                    [0,0,0,1]])
+
+
+    M = R1@R2@R1@T1
+    inverse_M = np.linalg.inv(M)
+    inverse_M_from_scratch = T2@R3@R2_inv@R3
+
+    if np.allclose(inverse_M, inverse_M_from_scratch):
+       # print("OK. Inverse matrix calculation is consistent")
+       pass
+    else:  
+        print("Inverse matrix calculation is NOT consistent")
+        raise ValueError("Inverse matrix calculation is NOT consistent")
+    
+    return M, inverse_M
+
+
 
 def generate_next_point(point, Transformation):
     if len(point) == 3:
@@ -28,7 +99,7 @@ def generate_next_point(point, Transformation):
     v = Transformation @ point
     return homogeneous_to_cartesian(v)
 
-def generate_point_on_helix(n_points :int, point, Transformation):
+def generate_points_on_helix(n_points :int, point, Transformation):
     if n_points < 1:
         raise ValueError("n_points must be at least 1.")
     if len(point) == 4:
@@ -129,10 +200,30 @@ def connecting_line_for_bisectors(a, b, c, d):
     return M, dir_vec
 
 
+
+def find_axis_dir_ev(M_in):
+    M = M_in.copy()[:3,:3]
+    vals, vecs = np.linalg.eig(M)
+
+    axis_vec = np.real(vecs[:, np.isclose(vals, 1.)])
+
+    #test if it actually an eigenvector
+    assert np.allclose(M@axis_vec, axis_vec), "Computation of eigenvector failed"
+
+    unit(axis_vec)
+
+    return axis_vec[:,0]
+
+
+
 def find_helix_axis(point, transformation):
-    points = generate_point_on_helix(4, point, transformation)
+    points = generate_points_on_helix(4, point, transformation)
     a, b, c, d = points
     point, direction = connecting_line_for_bisectors(a, b, c, d)
+    ev_direction = find_axis_dir_ev(transformation)
+
+    assert np.allclose(unit(direction), unit(ev_direction)) or np.allclose(unit(direction), -unit(ev_direction)), "Direction from bisectors does not match eigenvector direction"   
+
     return point, direction
 
 
@@ -208,6 +299,7 @@ def transform_points(points, axis_origin, axis_direction):
     points -= axis_origin
     R = rotation_to_z(axis_direction)
     points = points @ R.T
+    points -= np.array([0,0,points[0,2]])
     return points
 
 
@@ -222,3 +314,25 @@ def turn_spiral_about_z_axis(points):
                   [ 0,  0, 1]])  # 180° about z
 
     return points @ R.T  # apply rotation to all points
+
+def point_line_distance(P, A, v):
+    """
+    Distance between point P and line passing through A with direction v.
+    """
+    P, A, v = map(lambda x: np.asarray(x, float), (P, A, v))
+    return np.linalg.norm(np.cross(P - A, v)) / np.linalg.norm(v)
+
+def angle(v1, v2):
+    v1_u = v1 / np.linalg.norm(v1)
+    v2_u = v2 / np.linalg.norm(v2)
+    dot_product = np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)
+    angle_rad = np.arccos(dot_product)
+    return np.rad2deg(angle_rad)
+
+def find_number_of_segments_for_length(points_in, length):
+    delta_points = np.diff(points_in.copy(), axis=0)
+    assert np.allclose(delta_points[:,2], delta_points[0,2])
+    deltaz = delta_points[0,2]
+    number = int(np.ceil(length/deltaz))
+
+    return length, deltaz, number, deltaz*number
