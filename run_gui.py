@@ -117,6 +117,9 @@ html.Div(id='Nturns_from_length', style={'marginTop': '10px'}),
 
 def update_helix(outer_length, cut_angle, pipe_diameter, twist_angle, length, segments, double_helix = ['True']):
     
+
+    pipe_diameter *= 25.4 # mm to inches
+
     L = center_length_from_outer(outer_length, cut_angle, pipe_diameter)
     theta = cut_angle * 2
     tau = twist_angle
@@ -136,12 +139,12 @@ def update_helix(outer_length, cut_angle, pipe_diameter, twist_angle, length, se
 
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=6)))
+    fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=20)))
 
     if double_helix:
         x, y, z = turn_spiral_about_z_axis(points_straight).T
 
-        fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=6)))
+        fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=20)))
 
 
 

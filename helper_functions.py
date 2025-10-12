@@ -93,6 +93,7 @@ Doing this transformation to B will give you A, and doing the inverse to C will 
 
 
 def generate_next_point(point, Transformation):
+
     if len(point) == 3:
         point = np.append(point, 1)
     elif len(point) != 4:
@@ -228,16 +229,6 @@ def find_helix_axis(point, transformation):
     return point, direction
 
 
-
-
-# -------- Example usage --------
-# a = np.array([0.0, 0.0, 0.0])
-# b = np.array([1.0, 0.0, 0.0])
-# c = np.array([1.0, 1.0, 0.0])
-# d = np.array([2.0, 1.0, 1.0])
-# point, direction = connecting_line_for_bisectors(a, b, c, d)
-# print("Point on connecting line:", point)
-# print("Direction (unit):", direction)
 
 
 def rotation_to_z(v):
