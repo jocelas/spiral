@@ -79,6 +79,9 @@ html.Div(id='actual_length_from_length', style={'marginTop': '10px'}),
 html.Div(id='L', style={'marginTop': '10px'}),
 html.Div(id='Nturns', style={'marginTop': '10px'}),
 html.Div(id='Nturns_from_length', style={'marginTop': '10px'}),
+html.Div(id='loose', style={'marginTop': '10px'}),
+html.Div(id='wide', style={'marginTop': '10px'}),
+
 
 
 
@@ -103,6 +106,8 @@ html.Div(id='Nturns_from_length', style={'marginTop': '10px'}),
     Output('L', 'children'),
     Output('Nturns', 'children'),
     Output('Nturns_from_length', 'children'),
+    Output('loose', 'children'),
+    Output('wide', 'children'),
 
     
     Input('outer-length', 'value'),
@@ -134,9 +139,20 @@ def update_helix(outer_length, cut_angle, pipe_diameter, twist_angle, length, se
     Nturns = find_number_of_turns(polar_angle, segments)
     Nturns_from_length = find_number_of_turns(polar_angle, segments_from_length)
 
+    loose_enough = is_helix_loose_enough(L, theta, tau, pipe_diameter)
+    if loose_enough:
+        loose_enough_text = f"Yes!"
+    else:
+        loose_enough_text = f"No :("
+
+    wide_enough = is_helix_wide_enough(helix_radius, pipe_diameter)
+    if wide_enough:
+        wide_enough_text = f"Yes :)"
+    else:
+        wide_enough_text = f"No :("
+    
+
     x, y, z = points_straight.T
-
-
     fig = go.Figure()
 
     fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=20)))
@@ -161,7 +177,9 @@ def update_helix(outer_length, cut_angle, pipe_diameter, twist_angle, length, se
     f"Actual length using {segments_from_length} segments: {actual_length_from_length:.2f} mm",\
     f"center length of the pipe: {L:.2f} mm",\
     f"Number of turns (calculated for {segments} segments): {Nturns:.2f}",\
-    f"N turns (calculated for {segments_from_length} segments): {Nturns_from_length:.2f}"\
+    f"N turns (calculated for {segments_from_length} segments): {Nturns_from_length:.2f}",\
+    f"Is the Helix loose enough? {loose_enough_text}",\
+    f"Is the Helix wide anough (diameter large enough)? {wide_enough_text}"
 
 if __name__ == "__main__":
     app.run(debug=False)

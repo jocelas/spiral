@@ -387,3 +387,78 @@ def polar_angle_between(p1, p2):
 
 def find_number_of_turns(polar_angle, number):
     return polar_angle * number / 2 / np.pi
+
+
+def find_helix_parameters(L, theta, tau):
+    
+    M, _ = transformation_matrix(L, theta, tau)
+
+    initial_point = np.array([0,0,0])
+
+    axis_origin, axis_direction = find_helix_axis(initial_point, M)
+
+    radius = point_line_distance(initial_point, axis_origin, axis_direction)
+
+    points = generate_points_on_helix(2, initial_point, M)
+
+    points_straight = transform_points(points, axis_origin, axis_direction)
+
+    polar_angle = polar_angle_between(points_straight[1], points_straight[0])
+
+    deltaz = points_straight[1,2] - points_straight[0,2]
+
+    return radius, polar_angle, deltaz
+
+
+
+def tangent_angle(radius, polar_angle, deltaz):
+    return np.degrees(np.arccos(deltaz / np.sqrt((radius*polar_angle)**2 + deltaz**2)))
+
+
+r, theta, d = find_helix_parameters(30,20,15)
+
+ang = tangent_angle(r, theta, d)
+
+M, _ = transformation_matrix(30,20,15)
+points = generate_points_on_helix(5,np.array([0,0,0.]), M)
+axis_origin, axis_direction = find_helix_axis(points[0], M)
+points_straight = transform_points(points, axis_origin, axis_direction)
+
+angle(points_straight[1]-points_straight[0], [0,0,1]), ang
+
+distance = 2 * np.pi * d * np.cos(np.deg2rad(ang))
+
+ang, distance, 2 * np.pi * d
+
+
+
+def is_helix_loose_enough(L, theta, tau, pipe_diameter, eps = 1):
+    radius, polar_angle, deltaz = find_helix_parameters(L, theta, tau)
+
+    tang_ang = tangent_angle(radius, polar_angle, deltaz)
+
+    M, _ = transformation_matrix(L, theta, tau)
+    points = generate_points_on_helix(2,np.array([0,0,0.]), M)
+    axis_origin, axis_direction = find_helix_axis(points[0], M)
+
+    discrete_angle = angle(points[1] - points[0], axis_direction)
+
+    if np.abs(tang_ang - discrete_angle) > 3:
+        raise ValueError("angles too far apart")
+    
+    distance = 2 * np.pi * deltaz * np.cos(discrete_angle)
+
+    #if distance < 0:
+     #   return True
+
+    if distance < 2 * pipe_diameter + eps:
+        return False
+    
+    return True
+
+
+def is_helix_wide_enough(radius, pipe_diameter, eps = 1):
+    if radius > pipe_diameter / 2 + eps:
+        return True
+    else:
+        return False
