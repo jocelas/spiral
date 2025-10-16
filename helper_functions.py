@@ -101,15 +101,13 @@ def generate_next_point(point, Transformation):
     v = Transformation @ point
     return homogeneous_to_cartesian(v)
 
-def generate_points_on_helix(n_points :int, point, Transformation):
-    if n_points < 1:
+def generate_points_on_helix(segments :int, Transformation):
+    # generates N segments based on the transformation
+    if segments < 1:
         raise ValueError("n_points must be at least 1.")
-    if len(point) == 4:
-        point = homogeneous_to_cartesian(point)
-    elif len(point) != 3:
-        raise ValueError("point must be a 3D or 4D vector.")
+    point = np.array([0,0,0]) # Transformation matrix works such that the starting point is on the origin!
     points = [point]
-    for _ in range(n_points-1):
+    for _ in range(segments):
         point = generate_next_point(point, Transformation)
         points.append(point)
     return np.array(points)
@@ -135,6 +133,7 @@ def make_line(point, vector, length = 100):
 
 
 
+### These functions are important for finding the axis of the Helix
 
 def unit(v, eps=1e-12):
     n = np.linalg.norm(v)
@@ -202,8 +201,8 @@ def connecting_line_for_bisectors(a, b, c, d):
     return M, dir_vec
 
 
-
 def find_axis_dir_ev(M_in):
+    ## This finds the direction of the axis, as the direction is an eigenvector of the rotation Part of the trafo matrix
     M = M_in.copy()[:3,:3]
     vals, vecs = np.linalg.eig(M)
 
@@ -218,20 +217,22 @@ def find_axis_dir_ev(M_in):
 
 
 
-def find_helix_axis(point, transformation):
-    points = generate_points_on_helix(4, point, transformation)
+def find_helix_axis(transformation):
+    points = generate_points_on_helix(3, transformation)
     a, b, c, d = points
     point, direction = connecting_line_for_bisectors(a, b, c, d)
     ev_direction = find_axis_dir_ev(transformation)
 
-    assert np.allclose(unit(direction), unit(ev_direction)) or np.allclose(unit(direction), -unit(ev_direction)), "Direction from bisectors does not match eigenvector direction"   
+    assert np.allclose(unit(direction), unit(ev_direction), atol = 1e-5) or np.allclose(unit(direction), -unit(ev_direction), atol = 1e-5), f"Direction from bisectors does not match eigenvector direction \n {np.abs(np.dot(unit(direction), unit(ev_direction)))}"   
 
     return point, direction
 
-
+# end of axis finding
 
 
 def rotation_to_z(v):
+    ## take a vector and return the transformation that rotates it to the z axis
+    # done with ChatGPT
     v = np.asarray(v, dtype=float)
     v = v / np.linalg.norm(v)          # normalize
     z = np.array([0, 0, 1], float)
@@ -253,10 +254,15 @@ def rotation_to_z(v):
                   [-axis[1], axis[0], 0]])
 
     R = np.eye(3) + np.sin(angle)*K + (1 - np.cos(angle))*(K @ K)
+
+    # Check if det R is 1:
+    assert np.isclose(np.linalg.det(R), 1), "The rotation to z was not correctly caluclated."
+
     return R
 
 
 def translation_to_origin(point):
+    # find homogeneous matrix that translates a point to the origin.
     point = np.asarray(point, dtype=float)
     if point.shape != (3,):
         raise ValueError("point must be a 3D vector.")
@@ -264,57 +270,30 @@ def translation_to_origin(point):
     T[:3, 3] = -point
     return T
 
-def make_helix_axis_z_axis(point, direction, return_transformation=True):
-    point = np.asarray(point, dtype=float)
-    direction = np.asarray(direction, dtype=float)
-    if point.shape == (3,):
-        ponint = np.append(point, 1)
-    elif point.shape != (4,):
-        raise ValueError("point must be a 3D or 4D vector.")
-    if direction.shape != (3,):
-        raise ValueError("direction must be a 3D vector.")
-    direction = np.append(direction, 1)
-    direction = direction / np.linalg.norm(direction)  # normalize
-    T = translation_to_origin(point)
-    R = rotation_to_z(direction)
-    RT = np.eye(4)
-    RT[:3, :3] = R
-    point_in_z = RT @ T @ point
-    direction_in_z = RT @ T @ direction
-    assert np.allclose(direction_in_z, np.array([0, 0, 1, 1])), "Direction not aligned with z-axis"
-    assert np.allclose(point_in_z[2], 0), "Point not in xy-plane"
-    if return_transformation:
-        return point_in_z, direction_in_z, R
-    return point_in_z, direction_in_z
-
-def transform_points(points, axis_origin, axis_direction):
+def transform_helix_to_z_axis(points, axis_origin, axis_direction):
     points -= axis_origin
     R = rotation_to_z(axis_direction)
-    points = points @ R.T
-    points -= np.array([0,0,points[0,2]])
+    points = points @ R.T # rotate all the points such that the axis is z axis
+    points -= np.array([0,0,points[0,2]]) # put the first segment on the xy plane
     return points
 
 
-
-def turn_spiral_about_z_axis(points):
-    """
-    Rotate a list or Nx3 array of 3D points by 180° around the z-axis.
-    """
+def make_second_helix(points):
+    # makes the second helix for a double helix
     points = np.asarray(points, dtype=float)
     R = np.array([[-1,  0, 0],
                   [ 0, -1, 0],
-                  [ 0,  0, 1]])  # 180° about z
+                  [ 0,  0, 1.]])  # 180° about z
 
     return points @ R.T  # apply rotation to all points
 
 def point_line_distance(P, A, v):
-    """
-    Distance between point P and line passing through A with direction v.
-    """
+    #Distance between point P and line passing through A with direction v.
     P, A, v = map(lambda x: np.asarray(x, float), (P, A, v))
     return np.linalg.norm(np.cross(P - A, v)) / np.linalg.norm(v)
 
 def angle(v1, v2):
+    # Angle between two vectors v1 and v2
     v1_u = v1 / np.linalg.norm(v1)
     v2_u = v2 / np.linalg.norm(v2)
     dot_product = np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)
@@ -342,16 +321,16 @@ def full_helix_calculation(L, theta, tau, length = None, segments = None):
 
     M, inverse_M = transformation_matrix(L, theta, tau)
 
-    points = generate_points_on_helix(4, np.array([0,0,0,1]), M)
-    axis_origin, axis_direction = find_helix_axis(points[0], M)
+    points = generate_points_on_helix(4, M)
+    axis_origin, axis_direction = find_helix_axis(M)
 
     helix_radius = point_line_distance(points[0], axis_origin, axis_direction)
     if length is not None and segments is None:
-        points_straight = transform_points(points.copy(), axis_origin, axis_direction)
+        points_straight = transform_helix_to_z_axis(points.copy(), axis_origin, axis_direction)
         _, deltaz, segments, actual_length  = find_number_of_segments_for_length(points_straight, length)
 
-    points = generate_points_on_helix(segments, np.array([0,0,0,1]), M)
-    points_straight = transform_points(points.copy(), axis_origin, axis_direction)
+    points = generate_points_on_helix(segments, M)
+    points_straight = transform_helix_to_z_axis(points.copy(), axis_origin, axis_direction)
 
     if length is not None and segments is None:
         return points_straight, helix_radius, segments, actual_length, deltaz
@@ -360,7 +339,7 @@ def full_helix_calculation(L, theta, tau, length = None, segments = None):
         actual_length = np.abs(points_straight[-1,2] - points_straight[0,2])
 
         deltaz = np.abs(points_straight[1,2] - points_straight[0,2])
-        assert np.isclose(actual_length/(segments-1), deltaz), f"Calculated pitch (deltaz) does not match actual pitch from points.\n Deltaz = {deltaz}, length/segments = {actual_length/segments}" 
+        assert np.isclose(actual_length/(segments), deltaz), f"Calculated pitch (deltaz) does not match actual pitch from points.\n Deltaz = {deltaz}, length/segments = {actual_length/segments}" 
         return points_straight, helix_radius, segments, actual_length, deltaz
 
     if length is not None and segments is not None:
@@ -370,12 +349,15 @@ def full_helix_calculation(L, theta, tau, length = None, segments = None):
 
     raise NotImplementedError("Something has gone wrong in the full helix calculation!")
 
+
+
 def center_length_from_outer(outer_length, cut_angle, diameter):
     cut_angle_rad = np.deg2rad(cut_angle)
     return outer_length - diameter * np.tan(cut_angle_rad)
 
 
 def polar_angle_between(p1, p2):
+    # returns polar angle in **RADIANS**
     x1, y1, _ = p1
     x2, y2, _ = p2
     theta1 = np.arctan2(y1, x1)
@@ -393,72 +375,91 @@ def find_helix_parameters(L, theta, tau):
     
     M, _ = transformation_matrix(L, theta, tau)
 
-    initial_point = np.array([0,0,0])
+    axis_origin, axis_direction = find_helix_axis(M)
 
-    axis_origin, axis_direction = find_helix_axis(initial_point, M)
+    points = generate_points_on_helix(4, M)
 
-    radius = point_line_distance(initial_point, axis_origin, axis_direction)
 
-    points = generate_points_on_helix(2, initial_point, M)
+    radius = point_line_distance(points[0], axis_origin, axis_direction)
 
-    points_straight = transform_points(points, axis_origin, axis_direction)
+    points_straight = transform_helix_to_z_axis(points, axis_origin, axis_direction)
 
     polar_angle = polar_angle_between(points_straight[1], points_straight[0])
 
     deltaz = points_straight[1,2] - points_straight[0,2]
+    assert np.isclose (deltaz, points_straight[-1,2] - points_straight[-2,2]), "deltaz calculation wrong"
 
     return radius, polar_angle, deltaz
 
 
 
-def tangent_angle(radius, polar_angle, deltaz):
-    return np.degrees(np.arccos(deltaz / np.sqrt((radius*polar_angle)**2 + deltaz**2)))
+def analytical_angle_to_xy_plane(radius, polar_angle, deltaz):
+    # Calculates angle to xy plane of analytical spiral
+    pitch = deltaz * 2 * np.pi / polar_angle # height increase for 1 entire turn
+    tanalpha = pitch / (2 * np.pi * radius)
+    alpha = np.arctan(tanalpha)
+    return np.rad2deg(alpha)
+
+def segment_angle_to_xy_plane(L, deltaz):
+    # Calculates angle of 2 points on helix with z as the helix axis to the xy plane (plane orthogonal to z axis)
+    sinalpha = deltaz / L
+    alpha = np.arcsin(sinalpha)
+    return np.rad2deg(alpha)
 
 
-r, theta, d = find_helix_parameters(30,20,15)
 
-ang = tangent_angle(r, theta, d)
+# r, theta, d = find_helix_parameters(30,20,15)
 
-M, _ = transformation_matrix(30,20,15)
-points = generate_points_on_helix(5,np.array([0,0,0.]), M)
-axis_origin, axis_direction = find_helix_axis(points[0], M)
-points_straight = transform_points(points, axis_origin, axis_direction)
+# ang = tangent_angle(r, theta, d)
 
-angle(points_straight[1]-points_straight[0], [0,0,1]), ang
+# M, _ = transformation_matrix(30,20,15)
+# points = generate_points_on_helix(5, M)
+# axis_origin, axis_direction = find_helix_axis(points[0], M)
+# points_straight = transform_points(points, axis_origin, axis_direction)
 
-distance = 2 * np.pi * d * np.cos(np.deg2rad(ang))
+# angle(points_straight[1]-points_straight[0], [0,0,1]), ang
 
-ang, distance, 2 * np.pi * d
+# distance = 2 * np.pi * d * np.cos(np.deg2rad(ang))
+
+# ang, distance, 2 * np.pi * d
 
 
 
 def is_helix_loose_enough(L, theta, tau, pipe_diameter, eps = 1):
     radius, polar_angle, deltaz = find_helix_parameters(L, theta, tau)
 
-    tang_ang = tangent_angle(radius, polar_angle, deltaz)
+    tang_ang = analytical_angle_to_xy_plane(radius, polar_angle, deltaz)
 
     M, _ = transformation_matrix(L, theta, tau)
-    points = generate_points_on_helix(2,np.array([0,0,0.]), M)
-    axis_origin, axis_direction = find_helix_axis(points[0], M)
+    points = generate_points_on_helix(2, M)
+    axis_origin, axis_direction = find_helix_axis(M)
 
     discrete_angle = angle(points[1] - points[0], axis_direction)
+    segment_angle = segment_angle_to_xy_plane(L, deltaz)
+    assert np.isclose(segment_angle, 90 - discrete_angle), "Angles wrong"
+    if not np.isclose(tang_ang, segment_angle, atol = 3): 
+        warnings.warn(f"Angles wrong ({segment_angle - tang_ang}), tau = {tau}")
 
-    if np.abs(tang_ang - discrete_angle) > 3:
-        raise ValueError("angles too far apart")
+    relevant_angle = max(tang_ang, segment_angle)
+    relevant_angle_rad = np.deg2rad(relevant_angle)
     
-    distance = 2 * np.pi * deltaz * np.cos(discrete_angle)
+    distance = 2 * np.pi * deltaz * np.sin(relevant_angle_rad)
 
     #if distance < 0:
      #   return True
+
+    
 
     if distance < 2 * pipe_diameter + eps:
         return False
     
     return True
 
-
-def is_helix_wide_enough(radius, pipe_diameter, eps = 1):
-    if radius > pipe_diameter / 2 + eps:
+def is_helix_wide_enough(L, theta, tau, pipe_diameter, eps = 1):
+    radius, polar_anlge, deltaz = find_helix_parameters(L, theta, tau)
+    if 2 * radius > pipe_diameter + eps:
         return True
     else:
         return False
+    
+is_helix_wide_enough(30,15,2,30)
