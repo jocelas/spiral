@@ -495,7 +495,7 @@ def find_allowed_twist_range(L, theta, pipe_diameter,
     return tau_lo, tau_hi
 
 
-def list_possible_helices(L, theta, pipe_diameter, desired_length, tau_increment = 1, bottom_offset = 2, top_offset = 0):
+def list_possible_helices(L, theta, pipe_diameter, desired_length, tau_increment = 1, bottom_offset = 1, top_offset = 0):
     taumin, taumax = find_allowed_twist_range(L, theta, pipe_diameter, eps_loose=1, eps_wide=1)
     taumin, taumax = np.ceil(taumin) + bottom_offset, np.floor(taumax) - top_offset
 

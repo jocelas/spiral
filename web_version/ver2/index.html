@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Helix Calculator</title>
+  <!-- Pico CSS for styling (local file) -->
+  <link rel="stylesheet" href="pico.min.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Helix Calculator</h1>
+    <form id="helixForm">
+      <!-- Outer Length input with increment/decrement -->
+      <label for="outer_length">Outer Length (mm)</label>
+      <div>
+        <button type="button" id="outer_length_dec">−</button>
+        <input type="number" id="outer_length" name="outer_length" value="30" step="1" min="0" />
+        <button type="button" id="outer_length_inc">+</button>
+      </div>
+
+      <!-- Cut Angle input with increment/decrement -->
+      <label for="cut_angle">Cut Angle (θ/2, degrees)</label>
+      <div>
+        <button type="button" id="cut_angle_dec">−</button>
+        <input type="number" id="cut_angle" name="cut_angle" value="7.5" step="0.1" />
+        <button type="button" id="cut_angle_inc">+</button>
+      </div>
+
+      <!-- Pipe Diameter input with increment/decrement -->
+      <label for="pipe_diameter">Pipe Diameter (inches)</label>
+      <div>
+        <button type="button" id="pipe_diameter_dec">−</button>
+        <input type="number" id="pipe_diameter" name="pipe_diameter" value="2.5" step="0.1" min="0" />
+        <button type="button" id="pipe_diameter_inc">+</button>
+      </div>
+
+      <!-- Desired Length input with increment/decrement -->
+      <label for="desired_length">Desired Helix Length (mm)</label>
+      <div>
+        <button type="button" id="desired_length_dec">−</button>
+        <input type="number" id="desired_length" name="desired_length" value="1000" step="10" min="0" />
+        <button type="button" id="desired_length_inc">+</button>
+      </div>
+
+      <!-- Calculate button -->
+      <button type="button" id="calculateBtn">Calculate</button>
+    </form>
+
+    <!-- Results section -->
+    <section id="results">
+      <!-- Filled dynamically with possible twist angles -->
+    </section>
+  </main>
+
+  <!-- Include helperfunctions logic -->
+  <script src="helperfunctions.js"></script>
+  <script>
+    // Attach increment/decrement button functionality and calculate action
+    (function() {
+      // Convenience: increment/decrement helper
+      function setupStepper(fieldId) {
+        const input = document.getElementById(fieldId);
+        document.getElementById(fieldId + "_inc").addEventListener("click", () => {
+          input.stepUp();
+        });
+        document.getElementById(fieldId + "_dec").addEventListener("click", () => {
+          input.stepDown();
+        });
+      }
+      // Set up all stepper controls
+      ["outer_length", "cut_angle", "pipe_diameter", "desired_length"].forEach(setupStepper);
+
+      // Calculate button event
+      document.getElementById("calculateBtn").addEventListener("click", () => {
+        // Get input values (convert to proper types)
+        const outerLen = parseFloat(document.getElementById("outer_length").value) || 0;
+        const cutAngle = parseFloat(document.getElementById("cut_angle").value) || 0;
+        const pipeDiamIn = parseFloat(document.getElementById("pipe_diameter").value) || 0;
+        const desiredLen = parseFloat(document.getElementById("desired_length").value) || 0;
+        // Compute center length from outer length and cut angle
+        const centerLen = centerLengthFromOuter(outerLen, cutAngle, pipeDiamIn);
+        const theta = 2 * cutAngle;  // total cut angle (degrees)
+        const pipeDiamMm = pipeDiamIn * 25.4;  // convert pipe diameter to mm
+
+        // Calculate possible helices list
+        const helices = listPossibleHelices(centerLen, theta, pipeDiamMm, desiredLen);
+        const resultsSection = document.getElementById("results");
+        resultsSection.innerHTML = "";  // clear previous results
+
+        if (!helices.length) {
+          resultsSection.innerHTML = "<p>No valid helix configurations found.</p>";
+          return;
+        }
+
+        // Create a list of results
+        const listEl = document.createElement("ul");
+        helices.forEach(h => {
+          const tau = h.tau;
+          // Create list item
+          const item = document.createElement("li");
+          item.textContent = `Twist Angle: ${tau.toFixed(0)}°`;  // display tau as integer degrees
+
+          // Create Visualize button (opens new tab with query parameters)
+          const link = document.createElement("a");
+          link.textContent = "Visualize Helix";
+          link.href = `visualize.html?L=${centerLen.toFixed(4)}&theta=${theta.toFixed(4)}&tau=${tau.toFixed(4)}&segments=${h.Nsegments}&pipe=${pipeDiamMm.toFixed(4)}`;
+          link.target = "_blank";
+          link.style.marginLeft = "1em";  // small spacing
+          item.appendChild(link);
+
+          listEl.appendChild(item);
+        });
+        resultsSection.appendChild(listEl);
+      });
+    })();
+  </script>
+</body>
+</html>

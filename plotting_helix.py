@@ -95,7 +95,7 @@ def connect_lines_mesh3d(line1, line2, color='lightblue', opacity=0.6, name='sur
 
 
 
-def plot_helix(L, theta, tau, segments, pipe_diameter, sides = 10, double_helix = True):
+def plot_helix(L, theta, tau, segments, pipe_diameter, sides = 10, double_helix = True, return_mode = False):
 
     fig = go.Figure()
     origin = np.zeros(3)
@@ -160,5 +160,7 @@ def plot_helix(L, theta, tau, segments, pipe_diameter, sides = 10, double_helix 
     dragmode="turntable",        # intuitive rotation
     scene_camera=dict(eye=dict(x=0, y=1.8, z=1.2)),  # pleasant starting view
     )
+
+    if return_mode: return fig
 
     fig.show()

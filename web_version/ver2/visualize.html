@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Helix Visualization</title>
+  <link rel="stylesheet" href="pico.min.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Helix Visualization</h1>
+    <label for="doubleHelixToggle">
+      <input type="checkbox" id="doubleHelixToggle" checked>
+      Double Helix
+    </label>
+    <!-- Plot container -->
+    <div id="plotContainer"></div>
+  </main>
+
+  <!-- Include Plotly and scripts (using local files for offline use) -->
+  <script src="plotly-3.1.0.min.js"></script>
+  <script src="helperfunctions.js"></script>
+  <script src="plothelix.js"></script>
+  <script>
+    // Parse URL parameters and generate the helix plot
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const L = parseFloat(params.get("L") || "0");
+      const theta = parseFloat(params.get("theta") || "0");
+      const tau = parseFloat(params.get("tau") || "0");
+      const segments = parseInt(params.get("segments") || "0");
+      const pipeDiam = parseFloat(params.get("pipe") || "0");
+      const checkbox = document.getElementById("doubleHelixToggle");
+
+      // Initial plot (using current state of checkbox for double helix)
+      plotHelix(L, theta, tau, segments, pipeDiam, checkbox.checked, "plotContainer");
+
+      // Re-plot whenever the double-helix toggle is changed
+      checkbox.addEventListener("change", () => {
+        plotHelix(L, theta, tau, segments, pipeDiam, checkbox.checked, "plotContainer");
+      });
+    })();
+  </script>
+</body>
+</html>

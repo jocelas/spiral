@@ -2,6 +2,7 @@ from dash import Dash, dcc, html, Input, Output
 import plotly.graph_objects as go
 import numpy as np
 from helper_functions import *
+from plotting_helix import *
 
 app = Dash(__name__)
 
@@ -152,22 +153,8 @@ def update_helix(outer_length, cut_angle, pipe_diameter, twist_angle, length, se
         wide_enough_text = f"No :("
     
 
-    x, y, z = points_straight.T
-    fig = go.Figure()
+    fig = plot_helix(L, theta, tau, segments, pipe_diameter, return_mode=True, sides = 20)
 
-    fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=20)))
-
-    if double_helix:
-        x, y, z = make_second_helix(points_straight).T
-
-        fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=20)))
-
-
-
-    fig.update_layout(
-        template='plotly_white',
-        scene=dict(aspectmode='data'),
-    )
 
     return fig,     \
     f"Helix diamter: {helix_radius * 2:.2f} mm",\
