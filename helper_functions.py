@@ -349,6 +349,13 @@ def full_helix_calculation(L, theta, tau, length = None, segments = None):
 
     raise NotImplementedError("Something has gone wrong in the full helix calculation!")
 
+def generate_straight_matrix(L, theta, tau, segments):
+    M, _ = transformation_matrix(L, theta, tau)
+    points = generate_points_on_helix(segments, M)
+    axis_origin, axis_direction = find_helix_axis(M)
+    points_straight = transform_helix_to_z_axis(points, axis_origin, axis_direction)
+    return points_straight
+
 
 
 def center_length_from_outer(outer_length, cut_angle, diameter):
@@ -427,33 +434,11 @@ def segment_angle_to_xy_plane(L, deltaz):
 
 def is_helix_loose_enough(L, theta, tau, pipe_diameter, eps = 1):
     radius, polar_angle, deltaz = find_helix_parameters(L, theta, tau)
-
-    tang_ang = analytical_angle_to_xy_plane(radius, polar_angle, deltaz)
-
-    M, _ = transformation_matrix(L, theta, tau)
-    points = generate_points_on_helix(2, M)
-    axis_origin, axis_direction = find_helix_axis(M)
-
-    discrete_angle = angle(points[1] - points[0], axis_direction)
-    segment_angle = segment_angle_to_xy_plane(L, deltaz)
-    assert np.isclose(segment_angle, 90 - discrete_angle), "Angles wrong"
-    if not np.isclose(tang_ang, segment_angle, atol = 3): 
-        warnings.warn(f"Angles wrong ({segment_angle - tang_ang}), tau = {tau}")
-
-    relevant_angle = max(tang_ang, segment_angle)
-    relevant_angle_rad = np.deg2rad(relevant_angle)
-    
-    distance = 2 * np.pi * deltaz * np.sin(relevant_angle_rad)
-
-    #if distance < 0:
-     #   return True
-
-    
-
-    if distance < 2 * pipe_diameter + eps:
+    nfull = 2*np.pi / polar_angle
+    if nfull * deltaz > 2 * pipe_diameter + eps:
+        return True
+    else:
         return False
-    
-    return True
 
 def is_helix_wide_enough(L, theta, tau, pipe_diameter, eps = 1):
     radius, polar_anlge, deltaz = find_helix_parameters(L, theta, tau)
