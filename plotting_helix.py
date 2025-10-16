@@ -1,4 +1,9 @@
 from helper_functions import *
+import numpy as np
+import matplotlib.pyplot as plt
+from helper_functions import *
+from plotting_helix import *
+import plotly.graph_objects as go
 
 def vis_tangent_vectors(segments, L, theta, tau):
     radius, polar_angle, deltaz = find_helix_parameters(L, theta, tau)
@@ -94,9 +99,8 @@ def plot_helix(L, theta, tau, segments, pipe_diameter, sides = 10, double_helix 
 
     fig = go.Figure()
     origin = np.zeros(3)
-    segments = 25
 
-    points_straight = generate_straight_matrix(L, theta, tau, segments)
+    points_straight = generate_straight_helix(L, theta, tau, segments)
     vectors = vis_tangent_vectors(segments, L, theta, tau)
 
     vectors = np.gradient(points_straight, axis=0)

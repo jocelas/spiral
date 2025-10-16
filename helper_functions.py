@@ -301,6 +301,7 @@ def angle(v1, v2):
     return np.rad2deg(angle_rad)
 
 def find_number_of_segments_for_length(points_in, length):
+    
     delta_points = np.diff(points_in.copy(), axis=0)
     assert np.allclose(delta_points[:,2], delta_points[0,2])
     deltaz = delta_points[0,2]
@@ -349,7 +350,8 @@ def full_helix_calculation(L, theta, tau, length = None, segments = None):
 
     raise NotImplementedError("Something has gone wrong in the full helix calculation!")
 
-def generate_straight_matrix(L, theta, tau, segments):
+def generate_straight_helix(L, theta, tau, segments):
+    # generates straight matrix points
     M, _ = transformation_matrix(L, theta, tau)
     points = generate_points_on_helix(segments, M)
     axis_origin, axis_direction = find_helix_axis(M)
@@ -379,17 +381,13 @@ def find_number_of_turns(polar_angle, number):
 
 
 def find_helix_parameters(L, theta, tau):
-    
-    M, _ = transformation_matrix(L, theta, tau)
 
-    axis_origin, axis_direction = find_helix_axis(M)
+    points_straight = generate_straight_helix(L, theta, tau, 4)
 
-    points = generate_points_on_helix(4, M)
+    radius = point_line_distance(points_straight[0], np.array([0.,0,0]), np.array([0,0,1.]))
+    radius_test = point_line_distance(points_straight[1], np.array([0.,0,0]), np.array([0,0,1.]))
 
-
-    radius = point_line_distance(points[0], axis_origin, axis_direction)
-
-    points_straight = transform_helix_to_z_axis(points, axis_origin, axis_direction)
+    assert np.isclose(radius, radius_test), "radius calculation wrong"
 
     polar_angle = polar_angle_between(points_straight[1], points_straight[0])
 
@@ -435,7 +433,7 @@ def segment_angle_to_xy_plane(L, deltaz):
 def is_helix_loose_enough(L, theta, tau, pipe_diameter, eps = 1):
     radius, polar_angle, deltaz = find_helix_parameters(L, theta, tau)
     nfull = 2*np.pi / polar_angle
-    if nfull * deltaz > 2 * pipe_diameter + eps:
+    if nfull * deltaz > 2 * (pipe_diameter + eps):
         return True
     else:
         return False
@@ -447,4 +445,78 @@ def is_helix_wide_enough(L, theta, tau, pipe_diameter, eps = 1):
     else:
         return False
     
-is_helix_wide_enough(30,15,2,30)
+def is_helix_allowed(L, theta, tau, pipe_diameter, eps_wide = 3, eps_loose = 3):
+    return is_helix_loose_enough(L, theta, tau, pipe_diameter, eps = eps_loose) * is_helix_wide_enough(L, theta, tau, pipe_diameter, eps = eps_wide)
+
+
+def find_allowed_twist_range(L, theta, pipe_diameter, 
+                             eps_loose=3, eps_wide=3,
+                             tau_min=0.0, tau_max=180.0, tol=1e-4):
+    """
+    Find the tau interval [tau_lo, tau_hi] for which is_helix_allowed() is True.
+    Uses binary search on each edge.
+    """
+    # Done with ChatGPT
+    def f(tau):
+        return is_helix_allowed(L, theta, tau, pipe_diameter, eps_loose=eps_loose, eps_wide=eps_wide)
+
+    # First, locate roughly where f becomes True
+    N = 50  # coarse scan
+    taus = np.linspace(tau_min, tau_max, N)
+    vals = [f(t) for t in taus]
+
+    if not any(vals):
+        return None, None  # no valid tau range at all
+
+    # Find coarse True region indices
+    idx_true = np.where(vals)[0]
+    i_start, i_end = idx_true[0], idx_true[-1]
+    lo_left, hi_left = taus[max(i_start - 1, 0)], taus[i_start]
+    lo_right, hi_right = taus[i_end], taus[min(i_end + 1, N - 1)]
+
+    # --- refine lower edge ---
+    while hi_left - lo_left > tol:
+        mid = 0.5 * (lo_left + hi_left)
+        if f(mid):
+            hi_left = mid
+        else:
+            lo_left = mid
+    tau_lo = hi_left
+
+    # --- refine upper edge ---
+    while hi_right - lo_right > tol:
+        mid = 0.5 * (lo_right + hi_right)
+        if f(mid):
+            lo_right = mid
+        else:
+            hi_right = mid
+    tau_hi = lo_right
+
+    return tau_lo, tau_hi
+
+
+def list_possible_helices(L, theta, pipe_diameter, desired_length, tau_increment = 1, bottom_offset = 2, top_offset = 0):
+    taumin, taumax = find_allowed_twist_range(L, theta, pipe_diameter, eps_loose=1, eps_wide=1)
+    taumin, taumax = np.ceil(taumin) + bottom_offset, np.floor(taumax) - top_offset
+
+    list_of_taus = np.arange(taumin, taumax, tau_increment)
+
+    outputs = []
+
+    for tau in list_of_taus:
+        radius, polar_angle, deltaz = find_helix_parameters(L, theta, tau)
+
+        Nsegments_for_length = np.floor(desired_length / deltaz)
+        actual_length = deltaz * Nsegments_for_length
+
+        donut_hole_diameter = np.abs(radius * 2 - pipe_diameter)
+
+        Nturns = find_number_of_turns(polar_angle, Nsegments_for_length)
+
+        turns_per_segment = find_number_of_turns(polar_angle, 1)
+
+        outer_diameter = pipe_diameter + radius * 2
+
+        outputs.append([tau, Nsegments_for_length, actual_length, Nturns, outer_diameter, donut_hole_diameter, deltaz, turns_per_segment])
+
+    return np.array(outputs)
