@@ -304,7 +304,7 @@ def find_number_of_segments_for_length(points_in, length):
     delta_points = np.diff(points_in.copy(), axis=0)
     assert np.allclose(delta_points[:,2], delta_points[0,2])
     deltaz = delta_points[0,2]
-    number = int(np.ceil(length/deltaz))
+    number = int(np.floor(length/deltaz))
 
     return length, deltaz, number, deltaz*number
 

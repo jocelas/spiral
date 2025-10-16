@@ -145,7 +145,7 @@ def update_helix(outer_length, cut_angle, pipe_diameter, twist_angle, length, se
     else:
         loose_enough_text = f"No :("
 
-    wide_enough = is_helix_wide_enough(helix_radius, pipe_diameter)
+    wide_enough = is_helix_wide_enough(helix_radius, theta, tau, pipe_diameter)
     if wide_enough:
         wide_enough_text = f"Yes :)"
     else:
@@ -158,7 +158,7 @@ def update_helix(outer_length, cut_angle, pipe_diameter, twist_angle, length, se
     fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=20)))
 
     if double_helix:
-        x, y, z = turn_spiral_about_z_axis(points_straight).T
+        x, y, z = make_second_helix(points_straight).T
 
         fig.add_trace(go.Scatter3d(x=x, y=y, z=z, line=dict(width=20)))
 
