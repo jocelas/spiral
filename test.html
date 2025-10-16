@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Helix Helper — Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    fieldset { border: 1px solid #ddd; padding: 12px; max-width: 820px; }
+    label { display: inline-block; min-width: 160px; margin: 6px 0; }
+    input { width: 120px; }
+    button { margin-top: 12px; padding: 6px 10px; }
+    table { border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: right; }
+    th { background: #f6f6f6; }
+    .error { color: #b00020; margin-top: 10px; }
+    .muted { color: #666; font-size: 0.9em; }
+  </style>
+  <script src="helperfunction_jonas.js"></script>
+</head>
+<body>
+  <h1>Helix Helper — Demo</h1>
+
+  <fieldset>
+    <legend>Parameters</legend>
+    <div>
+      <label for="L">Segment length L</label>
+      <input id="L" type="number" step="any" value="50" />
+    </div>
+    <div>
+      <label for="theta">Joint angle θ (deg)</label>
+      <input id="theta" type="number" step="any" value="45" />
+    </div>
+    <div>
+      <label for="tau">Twist τ (deg)</label>
+      <input id="tau" type="number" step="any" value="20" />
+    </div>
+    <div>
+      <label for="pipeDiameter">Pipe diameter</label>
+      <input id="pipeDiameter" type="number" step="any" value="30" />
+    </div>
+    <div>
+      <label for="desiredLength">Desired center length</label>
+      <input id="desiredLength" type="number" step="any" value="300" />
+    </div>
+    <div class="muted">
+      Scan settings (optional):
+    </div>
+    <div>
+      <label for="tauIncrement">τ increment (deg)</label>
+      <input id="tauIncrement" type="number" step="any" value="1" />
+    </div>
+    <div>
+      <label for="bottomOffset">Bottom offset (deg)</label>
+      <input id="bottomOffset" type="number" step="any" value="1" />
+    </div>
+    <div>
+      <label for="topOffset">Top offset (deg)</label>
+      <input id="topOffset" type="number" step="any" value="0" />
+    </div>
+
+    <button id="runBtn">Compute</button>
+    <div id="err" class="error"></div>
+  </fieldset>
+
+  <h2>Results</h2>
+  <div class="muted">Table shows one row per τ in the allowed range.</div>
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>τ (deg)</th>
+        <th># Segments</th>
+        <th>Actual Length</th>
+        <th># Turns</th>
+        <th>Outer Ø</th>
+        <th>Donut Hole Ø</th>
+        <th>Δz / segment</th>
+        <th>Turns / segment</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Your helper file with all functions -->
+  <script src="./helperfunctions_jonas.js"></script>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function toNum(id) {
+      return parseFloat($(id).value);
+    }
+
+    function renderTable(rows) {
+      const tbody = $("resultsTable").querySelector("tbody");
+      tbody.innerHTML = "";
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        r.forEach((val, i) => {
+          const td = document.createElement("td");
+          // small formatting
+          td.textContent = typeof val === "number" ? Number(val).toFixed(4) : val;
+          if (i === 0) td.textContent = Number(val).toFixed(2); // tau
+          if (i === 1) td.textContent = Number(val).toFixed(0); // #segments
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    }
+
+    $("runBtn").addEventListener("click", () => {
+      $("err").textContent = "";
+      try {
+        const L = toNum("L");
+        const theta = toNum("theta");
+        const tau = toNum("tau");
+        const pipeDiameter = toNum("pipeDiameter");
+        const desiredLength = toNum("desiredLength");
+        const tauIncrement = toNum("tauIncrement");
+        const bottomOffset = toNum("bottomOffset");
+        const topOffset = toNum("topOffset");
+
+        // Quick single-helix preview in console:
+        const { M } = transformationMatrix(L, theta, tau);
+        const pts = generatePointsOnHelix(6, M);
+        console.log("First 7 points (incl. origin):", pts);
+
+        // Full scan & table:
+        const rows = listPossibleHelices(
+          L, theta, pipeDiameter, desiredLength,
+          tauIncrement, bottomOffset, topOffset
+        );
+        renderTable(rows);
+      } catch (e) {
+        console.error(e);
+        $("err").textContent = e.message || String(e);
+      }
+    });
+
+    // Auto-run once with defaults for convenience
+    window.addEventListener("DOMContentLoaded", () => $("runBtn").click());
+  </script>
+</body>
+</html>

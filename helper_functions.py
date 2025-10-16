@@ -17,9 +17,6 @@ def homogeneous_to_cartesian(v):
         raise ValueError("The last component of the homogeneous coordinate cannot be zero.")
     return v[:3] / v[3]
 
-toCart = homogeneous_to_cartesian
-
-
 def transformation_matrix(L, theta, tau):
     '''To construct the helix, we will assume that the first point B lies at the origin. 
 The first segment goes in the x direction, so C is at $(L,0,0,1)$.
@@ -310,45 +307,45 @@ def find_number_of_segments_for_length(points_in, length):
     return length, deltaz, number, deltaz*number
 
 
-def full_helix_calculation(L, theta, tau, length = None, segments = None):
+# def full_helix_calculation(L, theta, tau, length = None, segments = None):
 
-    if length is None and segments is None:
-        warnings.warn("Either length or segments should be provided. Defaulting to segments = 25.")
-        segments = 25
+#     if length is None and segments is None:
+#         warnings.warn("Either length or segments should be provided. Defaulting to segments = 25.")
+#         segments = 25
 
-    if length is not None and length  <= 0:
-        warnings.warn("Lenght is invalid, defaulting to automatic length calculation")
-        length = None
+#     if length is not None and length  <= 0:
+#         warnings.warn("Lenght is invalid, defaulting to automatic length calculation")
+#         length = None
 
-    M, inverse_M = transformation_matrix(L, theta, tau)
+#     M, inverse_M = transformation_matrix(L, theta, tau)
 
-    points = generate_points_on_helix(4, M)
-    axis_origin, axis_direction = find_helix_axis(M)
+#     points = generate_points_on_helix(4, M)
+#     axis_origin, axis_direction = find_helix_axis(M)
 
-    helix_radius = point_line_distance(points[0], axis_origin, axis_direction)
-    if length is not None and segments is None:
-        points_straight = transform_helix_to_z_axis(points.copy(), axis_origin, axis_direction)
-        _, deltaz, segments, actual_length  = find_number_of_segments_for_length(points_straight, length)
+#     helix_radius = point_line_distance(points[0], axis_origin, axis_direction)
+#     if length is not None and segments is None:
+#         points_straight = transform_helix_to_z_axis(points.copy(), axis_origin, axis_direction)
+#         _, deltaz, segments, actual_length  = find_number_of_segments_for_length(points_straight, length)
 
-    points = generate_points_on_helix(segments, M)
-    points_straight = transform_helix_to_z_axis(points.copy(), axis_origin, axis_direction)
+#     points = generate_points_on_helix(segments, M)
+#     points_straight = transform_helix_to_z_axis(points.copy(), axis_origin, axis_direction)
 
-    if length is not None and segments is None:
-        return points_straight, helix_radius, segments, actual_length, deltaz
+#     if length is not None and segments is None:
+#         return points_straight, helix_radius, segments, actual_length, deltaz
     
-    if length is None and segments is not None:
-        actual_length = np.abs(points_straight[-1,2] - points_straight[0,2])
+#     if length is None and segments is not None:
+#         actual_length = np.abs(points_straight[-1,2] - points_straight[0,2])
 
-        deltaz = np.abs(points_straight[1,2] - points_straight[0,2])
-        assert np.isclose(actual_length/(segments), deltaz), f"Calculated pitch (deltaz) does not match actual pitch from points.\n Deltaz = {deltaz}, length/segments = {actual_length/segments}" 
-        return points_straight, helix_radius, segments, actual_length, deltaz
+#         deltaz = np.abs(points_straight[1,2] - points_straight[0,2])
+#         assert np.isclose(actual_length/(segments), deltaz), f"Calculated pitch (deltaz) does not match actual pitch from points.\n Deltaz = {deltaz}, length/segments = {actual_length/segments}" 
+#         return points_straight, helix_radius, segments, actual_length, deltaz
 
-    if length is not None and segments is not None:
-        actual_length = np.abs(points_straight[-1,2] - points_straight[0,2])
-        _, deltaz, segments_from_length, actual_length_from_length  = find_number_of_segments_for_length(points_straight, length)
-        return points_straight, helix_radius, segments, actual_length, deltaz, segments_from_length, actual_length_from_length
+#     if length is not None and segments is not None:
+#         actual_length = np.abs(points_straight[-1,2] - points_straight[0,2])
+#         _, deltaz, segments_from_length, actual_length_from_length  = find_number_of_segments_for_length(points_straight, length)
+#         return points_straight, helix_radius, segments, actual_length, deltaz, segments_from_length, actual_length_from_length
 
-    raise NotImplementedError("Something has gone wrong in the full helix calculation!")
+#     raise NotImplementedError("Something has gone wrong in the full helix calculation!")
 
 def generate_straight_helix(L, theta, tau, segments):
     # generates straight matrix points
