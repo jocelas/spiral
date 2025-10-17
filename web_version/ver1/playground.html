@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Helix Playground</title>
+  <link rel="stylesheet" href="pico.min.css">
+  <style>
+    body { max-width: 900px; margin: 2rem auto; padding: 1rem; }
+    .input-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+    .input-row input {
+      width: 100%;
+    }
+    button.small { width: 2.5rem; }
+    #output {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      background: #f9f9f9;
+    }
+
+    section {
+  background-color: white;
+  color: black;
+}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Helix Playground</h1>
+
+    <article>
+      <div class="input-row">
+        <label>Segment Outer Length (mm)</label>
+        <button class="small" onclick="changeValue('L', -0.5)">−</button>
+        <input id="L" type="number" step="0.5">
+        <button class="small" onclick="changeValue('L', 0.5)">+</button>
+      </div>
+
+      <div class="input-row">
+        <label>Cut Angle (°)</label>
+        <button class="small" onclick="changeValue('cutAngle', -0.5)">−</button>
+        <input id="cutAngle" type="number" step="0.5">
+        <button class="small" onclick="changeValue('cutAngle', 0.5)">+</button>
+      </div>
+
+      <div class="input-row">
+        <label>Twist Angle τ (°)</label>
+        <button class="small" onclick="changeValue('tau', -0.5)">−</button>
+        <input id="tau" type="number" step="0.5">
+        <button class="small" onclick="changeValue('tau', 0.5)">+</button>
+      </div>
+
+      <div class="input-row">
+        <label>Segments</label>
+        <button class="small" onclick="changeValue('segments', -1)">−</button>
+        <input id="segments" type="number" step="1">
+        <button class="small" onclick="changeValue('segments', 1)">+</button>
+      </div>
+
+      <div class="input-row">
+        <label>Pipe Diameter (inches)</label>
+        <button class="small" onclick="changeValue('pipeDiameterInches', -0.1)">−</button>
+        <input id="pipeDiameterInches" type="number" step="0.1">
+        <button class="small" onclick="changeValue('pipeDiameterInches', 0.1)">+</button>
+      </div>
+
+      <button class="contrast" onclick="recalculate()">Recalculate</button>
+      <button onclick="visualizeHelix()">Visualize</button>
+    </article>
+
+    <section id="output"></section>
+  </main>
+
+  <script src="plotly-3.1.0.min.js"></script>
+  <script src="helper_functions.js"></script>
+  <script src="plottinghelix.js"></script>
+  <script>
+    const H = window.HelixHelpers;
+    const params = Object.fromEntries(new URLSearchParams(window.location.search).entries());
+
+    // Initialize values
+    const LOuter = parseFloat(params.outerLength);
+    const theta = parseFloat(params.theta);
+    const cutAngle = theta / 2;
+    const tau = parseFloat(params.tau);
+    const segments = parseInt(params.segments);
+    const pipeDiameter = parseFloat(params.pipeDiameter);
+    const pipeDiameterInches = pipeDiameter / 25.4;
+
+    document.getElementById("L").value = LOuter.toFixed(2);
+    document.getElementById("cutAngle").value = cutAngle.toFixed(2);
+    document.getElementById("tau").value = tau.toFixed(2);
+    document.getElementById("segments").value = segments;
+    document.getElementById("pipeDiameterInches").value = pipeDiameterInches.toFixed(2);
+
+    // Estimate initial outer diameter
+    const { radius } = H.find_helix_parameters(L, theta, tau);
+
+    function changeValue(id, delta) {
+      const el = document.getElementById(id);
+      el.value = (parseFloat(el.value) + delta).toFixed(2);
+      recalculate();
+    }
+
+    function recalculate() {
+      const LOuter = parseFloat(document.getElementById('L').value);
+      const cutAngle = parseFloat(document.getElementById('cutAngle').value);
+      const theta = cutAngle * 2;
+      const tau = parseFloat(document.getElementById('tau').value);
+      const segments = parseInt(document.getElementById('segments').value);
+      const pipeDiameterInches = parseFloat(document.getElementById('pipeDiameterInches').value);
+      const pipeDiameter = pipeDiameterInches * 25.4;
+      let L = H.center_length_from_outer(LOuter, cutAngle, pipeDiameter);
+
+      const { radius, polar_angle, deltaz } = H.find_helix_parameters(L, theta, tau);
+      const Nturns = H.find_number_of_turns(polar_angle, segments);
+      const actualLength = deltaz * segments;
+      const outerDiameter = pipeDiameter + 2 * radius;
+      const allowed = H.is_helix_allowed(L, theta, tau, pipeDiameter);
+
+      const out = document.getElementById("output");
+      out.innerHTML = `
+        <h3>Computed Parameters</h3>
+           <b>Δz per segment:</b> ${deltaz.toFixed(2)} mm<br>
+           <b>Number of turns:</b> ${Nturns.toFixed(2)}<br>
+           <b>Actual Length:</b> ${actualLength.toFixed(1)} mm<br>
+           <b>Outer Diameter:</b> ${outerDiameter.toFixed(1)} mm<br>
+           <b>Helix Allowed:</b> ${allowed ? "<span style='color:green'>Yes</span>" : "<span style='color:red'>No</span>"}</p>
+      `;
+    }
+
+    function visualizeHelix() {
+      const LOuter = parseFloat(document.getElementById('L').value);
+      const cutAngle = parseFloat(document.getElementById('cutAngle').value);
+      const theta = cutAngle * 2;
+      const tau = parseFloat(document.getElementById('tau').value);
+      const segments = parseInt(document.getElementById('segments').value);
+      const pipeDiameterInches = parseFloat(document.getElementById('pipeDiameterInches').value);
+      const pipeDiameter = pipeDiameterInches * 25.4;
+      let L = H.center_length_from_outer(LOuter, cutAngle, pipeDiameter);
+      const params = new URLSearchParams({ L, theta, tau, segments, pipeDiameter });
+      window.open('visualize.html?' + params.toString(), '_blank');
+    }
+
+    // Auto-update when editing manually
+    document.querySelectorAll("input").forEach(el => el.addEventListener("change", recalculate));
+
+    recalculate();
+  </script>
+</body>
+</html>

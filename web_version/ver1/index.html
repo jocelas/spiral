@@ -41,6 +41,11 @@
       font-size: 0.8rem;
       padding: 0.3rem 0.6rem;
     }
+    td.actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+    }
   </style>
 </head>
 <body>
@@ -89,7 +94,7 @@
             <th>Length (mm)</th>
             <th>Turns</th>
             <th>Outer Ø (mm)</th>
-            <th>Visualize</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="resultsBody">
@@ -107,7 +112,7 @@
 
     function changeValue(id, delta) {
       const el = document.getElementById(id);
-      el.value = parseFloat(el.value) + delta;
+      el.value = (parseFloat(el.value) + delta).toFixed(2);
     }
 
     function calcHelices() {
@@ -138,7 +143,10 @@
           <td>${actualLength.toFixed(1)}</td>
           <td>${Nturns.toFixed(2)}</td>
           <td>${outer_diameter.toFixed(1)}</td>
-          <td><button class="visualize-btn" onclick="visualize(${L}, ${theta}, ${tau}, ${Nsegments}, ${pipeDiameter})">Show</button></td>
+          <td class="actions">
+            <button class="visualize-btn" onclick="visualize(${L}, ${theta}, ${tau}, ${Nsegments}, ${pipeDiameter})">View</button>
+            <button class="visualize-btn secondary" onclick="inspect(${outerLength}, ${theta}, ${tau}, ${Nsegments}, ${pipeDiameter})">Inspect</button>
+          </td>
         `;
         tbody.appendChild(tr);
       }
@@ -147,6 +155,11 @@
     function visualize(L, theta, tau, segments, pipeDiameter) {
       const params = new URLSearchParams({ L, theta, tau, segments, pipeDiameter });
       window.open('visualize.html?' + params.toString(), '_blank');
+    }
+
+    function inspect(outerLength, theta, tau, segments, pipeDiameter) {
+      const params = new URLSearchParams({ outerLength, theta, tau, segments, pipeDiameter });
+      window.open('playground.html?' + params.toString(), '_blank');
     }
 
     document.getElementById('calcBtn').addEventListener('click', calcHelices);
