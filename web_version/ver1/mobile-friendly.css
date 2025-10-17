@@ -1,0 +1,116 @@
+/* === Strong mobile overrides for PicoCSS === */
+/* Make interface genuinely mobile-friendly and thumb-sized */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent double-tap zooming on buttons/inputs */
+* {
+  touch-action: manipulation;
+}
+
+/* Base spacing & readability */
+body {
+  line-height: 1.8;
+  padding: 1.2rem;
+  font-size: 150%;
+  max-width: 90vw1;
+}
+
+/* Buttons and inputs overall */
+button,
+a[role="button"],
+input[type=number] {
+  font-size: 2rem !important;
+  border-radius: 0.7rem !important;
+}
+
+/* Regular action buttons */
+button,
+a[role="button"] {
+  padding: 0.9rem 1.4rem !important;
+  min-height: 52px !important;
+}
+
+/* + / – buttons: wider and chunkier for thumbs */
+button.small {
+  width: 4.2rem !important;      /* much wider than before */
+  height: 3.4rem !important;
+  font-size: 1.8rem !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+}
+
+/* Input fields: slightly narrower to leave room for buttons */
+.input-row input[type=number] {
+  flex: 1 1 auto;
+  max-width: 8rem;
+  text-align: center;
+  padding: 0.6rem 0.3rem;
+}
+
+/* Label styling */
+.input-row label {
+  font-weight: 500;
+  min-width: 10rem;
+}
+
+/* Layout stack on small screens */
+@media (max-width: 768px) {
+  .input-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .input-row label {
+    flex-basis: 100%;
+    text-align: center;
+    margin-bottom: 0.2rem;
+  }
+
+  input[type=number] {
+    max-width: 7rem;
+  }
+
+  h1, h2, h3 {
+    text-align: center;
+  }
+
+  #output {
+    line-height: 1.6;
+  }
+}
+
+/* Desktop: keep a compact inline layout */
+@media (min-width: 769px) {
+  .input-row {
+    gap: 0.7rem;
+  }
+}
+
+/* Article and output styling */
+article, section, #output {
+  border-radius: 1rem;
+  padding: 1.2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Table readability */
+table {
+}
+th, td {
+  padding: 0.8rem 0.5rem;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121418;
+  }
+  article, section {
+    background-color: #1c1f26;
+  }
+}

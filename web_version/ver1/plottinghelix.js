@@ -150,7 +150,7 @@
     }
 
     const layout = {
-      scene: {aspectmode:'data', camera:{eye:{x:0, y:1.8, z:1.2}}},
+      scene: {aspectmode:'data', camera:{eye:{x:3, y:3, z:3}}},
       dragmode: 'turntable',
       showlegend: false
     };
