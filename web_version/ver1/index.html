@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="pico.min.css">
   <style>
     body {
-      max-width: 800px;
+      max-width: 900px;
       margin: 2rem auto;
       padding: 1rem;
     }
@@ -19,14 +19,27 @@
     .input-row input {
       width: 100%;
     }
-    .result-card {
-      margin-top: 1rem;
-      padding: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 0.5rem;
-    }
     button.small {
       width: 2.5rem;
+    }
+    table {
+      width: 100%;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 0.5rem;
+    }
+    th {
+      white-space: nowrap;
+    }
+    .scroll-container {
+      overflow-x: auto;
+      margin-top: 1rem;
+    }
+    .visualize-btn {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
     }
   </style>
 </head>
@@ -67,7 +80,23 @@
     </article>
 
     <h2>Viable Helices</h2>
-    <div id="results"></div>
+    <div class="scroll-container">
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th>Twist (°)</th>
+            <th>Segments</th>
+            <th>Length (mm)</th>
+            <th>Turns</th>
+            <th>Outer Ø (mm)</th>
+            <th>Visualize</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody">
+          <tr><td colspan="6">No results yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
   </main>
 
   <script src="plotly-3.1.0.min.js"></script>
@@ -87,35 +116,32 @@
       const pipeDiameterInches = parseFloat(document.getElementById('pipeDiameter').value);
       const desiredLength = parseFloat(document.getElementById('desiredLength').value);
 
-      // Convert units and parameters
-      const pipeDiameter = pipeDiameterInches * 25.4; // inches → mm
-      const theta = cutAngle * 2;                     // cutAngle corresponds to theta/2
+      const pipeDiameter = pipeDiameterInches * 25.4;
+      const theta = cutAngle * 2;
       const L = H.center_length_from_outer(outerLength, cutAngle, pipeDiameter);
 
       const results = H.list_possible_helices(L, theta, pipeDiameter, desiredLength);
-      const container = document.getElementById('results');
-      container.innerHTML = "";
+      const tbody = document.getElementById('resultsBody');
+      tbody.innerHTML = "";
 
       if (!results.length) {
-        container.innerHTML = "<p>No valid helices found for these parameters.</p>";
+        tbody.innerHTML = `<tr><td colspan="6">No valid helices found for these parameters.</td></tr>`;
         return;
       }
 
-      results.forEach(row => {
-        const [tau, Nsegments, actualLength, Nturns, outer_diameter, donut_hole, deltaz, turns_per_segment] = row;
-        const div = document.createElement('div');
-        div.className = 'result-card';
-        div.innerHTML = `
-          <b>Twist angle:</b> ${tau.toFixed(2)}°<br>
-          <b>Segments:</b> ${Nsegments}<br>
-          <b>Length:</b> ${actualLength.toFixed(1)} mm<br>
-          <b>Turns:</b> ${Nturns.toFixed(2)}<br>
-          <b>Outer diameter:</b> ${outer_diameter.toFixed(1)} mm
-          <br><br>
-          <button onclick="visualize(${L}, ${theta}, ${tau}, ${Nsegments}, ${pipeDiameter})">Visualize</button>
+      for (const row of results) {
+        const [tau, Nsegments, actualLength, Nturns, outer_diameter] = row;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${tau.toFixed(2)}</td>
+          <td>${Nsegments}</td>
+          <td>${actualLength.toFixed(1)}</td>
+          <td>${Nturns.toFixed(2)}</td>
+          <td>${outer_diameter.toFixed(1)}</td>
+          <td><button class="visualize-btn" onclick="visualize(${L}, ${theta}, ${tau}, ${Nsegments}, ${pipeDiameter})">Show</button></td>
         `;
-        container.appendChild(div);
-      });
+        tbody.appendChild(tr);
+      }
     }
 
     function visualize(L, theta, tau, segments, pipeDiameter) {

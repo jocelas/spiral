@@ -391,38 +391,73 @@
         && is_helix_wide_enough(L, theta, tau, pipe_diameter, eps_wide);
   }
 
-  function find_allowed_twist_range(L, theta, pipe_diameter,
-                                    eps_loose=3, eps_wide=3,
-                                    tau_min=0.0, tau_max=180.0, tol=1e-4){
-    function f(tau){
-      return is_helix_allowed(L, theta, tau, pipe_diameter, eps_wide, eps_loose);
+  // function find_allowed_twist_range(L, theta, pipe_diameter,
+  //                                   eps_loose=3, eps_wide=3,
+  //                                   tau_min=0.0, tau_max=180.0, tol=1e-4){
+  //   function f(tau){
+  //     return is_helix_allowed(L, theta, tau, pipe_diameter, eps_wide, eps_loose);
+  //   }
+  //   const N = 50;
+  //   const taus = Array.from({length:N},(_,i)=> tau_min + i*(tau_max - tau_min)/(N-1));
+  //   const vals = taus.map(t=>f(t));
+
+  //   if (!vals.some(Boolean)) return {tau_lo: null, tau_hi: null};
+
+  //   const idx_true = [];
+  //   for (let i=0;i<N;i++) if (vals[i]) idx_true.push(i);
+  //   let i_start = idx_true[0], i_end = idx_true[idx_true.length-1];
+
+  //   let lo_left = taus[Math.max(i_start-1, 0)], hi_left = taus[i_start];
+  //   let lo_right = taus[i_end], hi_right = taus[Math.min(i_end+1, N-1)];
+
+  //   while (hi_left - lo_left > tol){
+  //     const mid = 0.5*(lo_left + hi_left);
+  //     if (f(mid)) hi_left = mid; else lo_left = mid;
+  //   }
+  //   const tau_lo = hi_left;
+
+  //   while (hi_right - lo_right > tol){
+  //     const mid = 0.5*(lo_right + hi_right);
+  //     if (f(mid)) lo_right = mid; else hi_right = mid;
+  //   }
+  //   const tau_hi = lo_right;
+  //   return {tau_lo, tau_hi};
+  // }
+
+  function find_allowed_twist_range(
+  L, theta, pipe_diameter,
+  eps_loose = 0, eps_wide = 0,
+  tau_min = 0.0, tau_max = 180.0, tau_step = 0.1
+) {
+  // Simple sweep: check allowed helices from tau_min to tau_max
+  const taus = [];
+  for (let t = tau_min; t <= tau_max; t += tau_step) taus.push(t);
+
+  const allowed = taus.map(t =>
+    is_helix_allowed(L, theta, t, pipe_diameter, eps_wide, eps_loose)
+  );
+
+  let tau_lo = null, tau_hi = null;
+  let inRange = false;
+
+  for (let i = 0; i < taus.length; i++) {
+    if (allowed[i] && !inRange) {
+      // Found start of valid range
+      tau_lo = taus[i];
+      inRange = true;
+    } else if (!allowed[i] && inRange) {
+      // Found end of valid range
+      tau_hi = taus[i - 1];
+      break;
     }
-    const N = 50;
-    const taus = Array.from({length:N},(_,i)=> tau_min + i*(tau_max - tau_min)/(N-1));
-    const vals = taus.map(t=>f(t));
-
-    if (!vals.some(Boolean)) return {tau_lo: null, tau_hi: null};
-
-    const idx_true = [];
-    for (let i=0;i<N;i++) if (vals[i]) idx_true.push(i);
-    let i_start = idx_true[0], i_end = idx_true[idx_true.length-1];
-
-    let lo_left = taus[Math.max(i_start-1, 0)], hi_left = taus[i_start];
-    let lo_right = taus[i_end], hi_right = taus[Math.min(i_end+1, N-1)];
-
-    while (hi_left - lo_left > tol){
-      const mid = 0.5*(lo_left + hi_left);
-      if (f(mid)) hi_left = mid; else lo_left = mid;
-    }
-    const tau_lo = hi_left;
-
-    while (hi_right - lo_right > tol){
-      const mid = 0.5*(lo_right + hi_right);
-      if (f(mid)) lo_right = mid; else hi_right = mid;
-    }
-    const tau_hi = lo_right;
-    return {tau_lo, tau_hi};
   }
+
+  // If still valid at the end, close at tau_max
+  if (inRange && tau_hi === null) tau_hi = tau_max;
+
+  return { tau_lo, tau_hi };
+}
+
 
   function list_possible_helices(L, theta, pipe_diameter, desired_length, tau_increment=1, bottom_offset=1, top_offset=0){
     let {tau_lo, tau_hi} = find_allowed_twist_range(L, theta, pipe_diameter);
