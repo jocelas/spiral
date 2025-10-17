@@ -15,7 +15,6 @@ body {
   line-height: 1.8;
   padding: 1.2rem;
   font-size: 150%;
-  max-width: 90vw1;
 }
 
 /* Buttons and inputs overall */
@@ -45,7 +44,7 @@ button.small {
 /* Input fields: slightly narrower to leave room for buttons */
 .input-row input[type=number] {
   flex: 1 1 auto;
-  max-width: 8rem;
+  max-width: 20em;
   text-align: center;
   padding: 0.6rem 0.3rem;
 }
@@ -54,13 +53,14 @@ button.small {
 .input-row label {
   font-weight: 500;
   min-width: 10rem;
+  line-height: 150%;
 }
 
 /* Layout stack on small screens */
 @media (max-width: 768px) {
   .input-row {
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: right;
     gap: 0.6rem;
     margin-bottom: 1rem;
   }
@@ -72,7 +72,7 @@ button.small {
   }
 
   input[type=number] {
-    max-width: 7rem;
+    max-width: 20em;
   }
 
   h1, h2, h3 {
@@ -100,9 +100,16 @@ article, section, #output {
 
 /* Table readability */
 table {
+  
+}
+th{
+  align-items: center;
+  justify-content: center;
 }
 th, td {
-  padding: 0.8rem 0.5rem;
+  padding: 0rem;
+  text-align: center;
+  padding-top: 1rem;
 }
 
 /* Dark mode */
@@ -114,3 +121,19 @@ th, td {
     background-color: #1c1f26;
   }
 }
+
+
+    body {
+      margin: 2rem auto;
+      padding: 1rem;
+      max-width: 90vw;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      justify-content: right;
+      gap: 10%;
+      line-height: 200%;
+      margin-top: .7em;
+      margin-bottom: .7em;;
+    }
