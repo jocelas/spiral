@@ -159,7 +159,7 @@
 
     function inspect(outerLength, theta, tau, segments, pipeDiameter) {
       const params = new URLSearchParams({ outerLength, theta, tau, segments, pipeDiameter });
-      window.open('playground.html?' + params.toString(), '_blank');
+      window.location.href = 'playground.html?' + params.toString();
     }
 
     document.getElementById('calcBtn').addEventListener('click', calcHelices);
