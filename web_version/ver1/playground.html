@@ -107,7 +107,7 @@
       const out = document.getElementById("output");
       out.innerHTML = `
         <h3>Computed Parameters</h3>
-           <b>Δz per segment:</b> ${deltaz.toFixed(2)} mm<br>
+           <b>height increase per segment:</b> ${deltaz.toFixed(2)} mm<br>
            <b>Number of turns:</b> ${Nturns.toFixed(2)}<br>
            <b>Actual Length:</b> ${actualLength.toFixed(1)} mm<br>
            <b>Outer Diameter:</b> ${outerDiameter.toFixed(1)} mm<br>
@@ -133,5 +133,18 @@
 
     recalculate();
   </script>
+
+
+  <article>
+    <h2>Usage</h2>
+    <ul>
+    <li>Here, you can set the twist angle yourself and see if the helix is still allowed.
+    <li>You can also set the number of segments and have the height calculated.
+    <li>The <b>height increase per segment</b> is how much height the helix gains, when you add a new segment to it. Actually, the height is calculated like this: <br>[actual height] = [# of segments] &times; [height increase per segment]</li>
+    </ul> 
+    
+
+  </article>
+
 </body>
 </html>
