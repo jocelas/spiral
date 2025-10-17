@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Helix Plot Demo</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    #plot {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Container for Plotly -->
+  <div id="plot"></div>
+
+  <!-- Include your libraries -->
+  <script src="plotly-3.1.0.min.js"></script>
+  <script src="helper_functions.js"></script>
+  <script src="plottinghelix.js"></script>
+
+  <!-- Call the function -->
+  <script>
+    // Parameters: L, theta, tau, segments, pipe_diameter
+    const L = 30;
+    const theta = 15;
+    const tau = 18;
+    const segments = 20;
+    const pipe_diameter = 63;
+
+    // Plot the double helix
+    PlottingHelix.plotHelix(L, theta, tau, segments, pipe_diameter, sides = 11, true, false);
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HelixHelpers Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2rem;
+      line-height: 1.6;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>HelixHelpers.js — Quick Test</h1>
+  <p>Open your browser console (F12 → Console) to see detailed results.</p>
+  <div id="output"></div>
+
+  <script src="helper_functions.js"></script>
+  <script>
+    const out = document.getElementById("output");
+    const H = window.HelixHelpers;
+
+    function log(msg, data){
+      console.log(msg, data);
+      const pre = document.createElement("pre");
+      pre.textContent = `${msg}:\n${JSON.stringify(data, null, 2)}`;
+      out.appendChild(pre);
+    }
+
+    // Example values
+    const L = 25;
+    const theta = 10;
+    const tau = 20;
+    const pipe_diameter = 3;
+    const desired_length = 500;
+
+    // Run a few computations
+    const transf = H.transformation_matrix(L, theta, tau);
+    log("Transformation matrix", transf.M);
+
+    const pts = H.generate_straight_helix(L, theta, tau, 10);
+    log("10 generated helix points", pts.slice(0,5));
+
+    const params = H.find_helix_parameters(L, theta, tau);
+    log("Helix parameters", params);
+
+    const allowed = H.is_helix_allowed(L, theta, tau, pipe_diameter);
+    log("Is helix allowed?", allowed);
+
+    const tauRange = H.find_allowed_twist_range(L, theta, pipe_diameter);
+    log("Allowed twist range", tauRange);
+
+    const list = H.list_possible_helices(L, theta, pipe_diameter, desired_length, 5);
+    log("List of possible helices", list.slice(0,5));
+  </script>
+</body>
+</html>

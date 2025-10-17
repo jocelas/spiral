@@ -1,203 +1,129 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pipe Helix</title>
-  <!-- Load user's local Plotly library -->
-  <script src="plotly-3.1.0.min.js"></script>
-
-  <!--link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
-  >-->
-
+  <meta charset="UTF-8">
+  <title>Helix Calculator</title>
+  <link rel="stylesheet" href="pico.min.css">
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 0; }
-    .container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: 100vh; }
-    .left { padding: 20px; padding-top: 10px; overflow: auto; }
-    .row { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
-    .row label { min-width: 230px; }
-    .right { height: 100vh; }
-    #helix-plot { width: 100%; height: 100%; }
-    .stat { margin-top: 8px; }
-    h1 { margin-top: 0px; }
+    body {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .input-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .input-row input {
+      width: 100%;
+    }
+    .result-card {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+    }
+    button.small {
+      width: 2.5rem;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="left">
-      <h1>Pipe helix welding project</h1>
+  <main>
+    <h1>Helix Calculator</h1>
 
-      <p>
-        This is the Pipe Helix project. 
-        You can input the parameters and the program will automatically the results.
-        Input the outer length of each segment, and the angle both sides are cut at (for example if you input 7.5 degrees, the total angle between the faces of the pipe segment will be 15 degrees.)<br>
-        Input the diameter of each pipe segment <b>in inches</b>.
-        The twist angle is the angle by which you need to twist each pipe segment before welding it to the previous one.
-        <br><br>
-        The desired length of the helix is there to see how many segments you would need to reach the desired length.
-        Everything will also be calculated for the number of segments you input, and also this number of segments will be displayed <i style = "color: #aa0000">(currently some things are calculated with [segments] - 1, this will soon be fixed)</i>.
-        <br><br>
-        Currently, this site is experimental and more details can be found on the <a href = "https://github.com/jocelas/spiral", target = "_blank">github page</a>.
-
-
-      </p>
-
-      <div class="row">
-        <label for="outer-length">Outer Length of each segment</label>
-        <input id="outer-length" type="number" value="30" min="0.1" max="1000" step="0.1" />
-        <span>mm</span>
+    <article>
+      <div class="input-row">
+        <label>Outer Length (mm)</label>
+        <button class="small" onclick="changeValue('outerLength', -1)">−</button>
+        <input id="outerLength" type="number" value="30" step="0.5">
+        <button class="small" onclick="changeValue('outerLength', 1)">+</button>
       </div>
 
-      <div class="row">
-        <label for="cut-angle">Cut angle</label>
-        <input id="cut-angle" type="number" value="7.5" min="0.1" max="89.9" step="0.1" />
-        <span>degrees</span>
+      <div class="input-row">
+        <label>Cut Angle (°)</label>
+        <button class="small" onclick="changeValue('cutAngle', -0.5)">−</button>
+        <input id="cutAngle" type="number" value="7.5" step="0.5">
+        <button class="small" onclick="changeValue('cutAngle', 0.5)">+</button>
       </div>
 
-      <div class="row">
-        <label for="pipe-diameter">Pipe diameter</label>
-        <input id="pipe-diameter" type="number" value="2.5" min="0.1" max="20" step="0.1" />
-        <span>inches</span>
+      <div class="input-row">
+        <label>Pipe Diameter (inches)</label>
+        <button class="small" onclick="changeValue('pipeDiameter', -0.1)">−</button>
+        <input id="pipeDiameter" type="number" value="2.5" step="0.1">
+        <button class="small" onclick="changeValue('pipeDiameter', 0.1)">+</button>
       </div>
 
-      <div class="row">
-        <label for="twist-angle">Twist angle</label>
-        <input id="twist-angle" type="number" value="15" min="0.1" max="179" step="0.1" />
-        <span>degrees</span>
+      <div class="input-row">
+        <label>Desired Length (mm)</label>
+        <button class="small" onclick="changeValue('desiredLength', -10)">−</button>
+        <input id="desiredLength" type="number" value="1000" step="10">
+        <button class="small" onclick="changeValue('desiredLength', 10)">+</button>
       </div>
 
-      <div class="row">
-        <label for="length">Desired length of helix</label>
-        <input id="length" type="number" value="1000" min="0.1" max="2000" step="0.1" />
-        <span>mm</span>
-      </div>
+      <button id="calcBtn" class="contrast">Calculate</button>
+    </article>
 
-      <div class="row">
-        <label for="segments">Number of segments</label>
-        <input id="segments" type="number" value="45" min="4" max="200" step="1" />
-      </div>
+    <h2>Viable Helices</h2>
+    <div id="results"></div>
+  </main>
 
-      <div class="row">
-        <label for="double_helix">Display double helix</label>
-        <input id="double_helix" type="checkbox" checked />
-      </div>
-
-      <div class="stat" id="radius"></div>
-      <div class="stat" id="actual_length"></div>
-      <div class="stat" id="deltaz"></div>
-      <div class="stat" id="segments_from_length"></div>
-      <div class="stat" id="actual_length_from_length"></div>
-      <div class="stat" id="L"></div>
-      <div class="stat" id="Nturns"></div>
-      <div class="stat" id="Nturns_from_length"></div>
-      <div class="stat" id="loose"></div>
-      <div class="stat" id="wide"></div>
-    </div>
-
-    <div class="right">
-      <div id="helix-plot"></div>
-    </div>
-  </div>
-
+  <script src="plotly-3.1.0.min.js"></script>
   <script src="helper_functions.js"></script>
+  <script src="plottinghelix.js"></script>
   <script>
-    const $ = (id) => document.getElementById(id);
-    function mmToInches(mm){ return mm / 25.4; }
-    function inchesToMm(inches){ return inches * 25.4; }
+    const H = window.HelixHelpers;
 
-    function update() {
-      let outer_length = parseFloat($('outer-length').value);
-      let cut_angle = parseFloat($('cut-angle').value);
-      let pipe_diameter_in = parseFloat($('pipe-diameter').value); // inches (input)
-      let twist_angle = parseFloat($('twist-angle').value);
-      let length = parseFloat($('length').value);
-      let segments = parseInt($('segments').value, 10) + 1; // here the + 1 is because {segments} nodes are shown which is equal to {segments - 1}
-      const double_helix = $('double_helix').checked;
-
-      // Convert to mm where needed to match Python semantics
-      const pipe_diameter_mm = inchesToMm(pipe_diameter_in);
-
-      const L = HelixHelpers.center_length_from_outer(outer_length, cut_angle, pipe_diameter_mm);
-      const theta = cut_angle * 2;
-      const tau = twist_angle;
-
-      const calc = HelixHelpers.full_helix_calculation(L, theta, tau, {length, segments});
-      const pts = calc.points_straight;
-      const helix_radius = calc.helix_radius;
-      const actual_length = calc.actual_length;
-      const deltaz = calc.deltaz;
-      const segments_from_length = calc.segments_from_length;
-      const actual_length_from_length = calc.actual_length_from_length;
-
-      const polar_angle = HelixHelpers.polar_angle_between(pts[1], pts[0]);
-      const Nturns = HelixHelpers.find_number_of_turns(polar_angle, segments);
-      const Nturns_from_length = HelixHelpers.find_number_of_turns(polar_angle, segments_from_length ?? segments);
-
-      const loose_enough = HelixHelpers.is_helix_loose_enough(L, theta, tau, pipe_diameter_mm);
-      const wide_enough = HelixHelpers.is_helix_wide_enough(helix_radius, pipe_diameter_mm);
-
-      // Prepare Plotly data
-      const x = pts.map(p=>p[0]);
-      const y = pts.map(p=>p[1]);
-      const z = pts.map(p=>p[2]);
-
-      const traces = [{
-        type: 'scatter3d',
-        x, y, z,
-        line: { width: 8 }
-      }];
-
-      if (double_helix) {
-        const pts2 = HelixHelpers.turn_spiral_about_z_axis(pts);
-        const x2 = pts2.map(p=>p[0]);
-        const y2 = pts2.map(p=>p[1]);
-        const z2 = pts2.map(p=>p[2]);
-        traces.push({
-          type: 'scatter3d',
-          x: x2, y: y2, z: z2,
-          line: { width: 8 }
-        });
-      }
-
-      const layout = {
-        template: 'plotly_white',
-        scene: { aspectmode: 'data' },
-        margin: { l: 0, r: 0, t: 0, b: 0 },
-        showlegend: false,
-
-      };
-
-      Plotly.newPlot('helix-plot', traces, layout, {responsive: true});
-
-      // Stats text
-      $('radius').textContent = `Helix diameter: ${(helix_radius * 2).toFixed(2)} mm`;
-      $('actual_length').textContent = `Actual length using ${segments} segments: ${actual_length.toFixed(2)} mm`;
-      $('deltaz').textContent = `Height increase per segment: ${deltaz.toFixed(2)} mm`;
-      if (segments_from_length !== null && segments_from_length !== undefined) {
-        $('segments_from_length').textContent = `Number of segments to reach desired length (${length.toFixed(2)}): ${segments_from_length}`;
-        $('actual_length_from_length').textContent = `Actual length using ${segments_from_length} segments: ${actual_length_from_length.toFixed(2)} mm`;
-      } else {
-        $('segments_from_length').textContent = '';
-        $('actual_length_from_length').textContent = '';
-      }
-      $('L').textContent = `Center length of the pipe: ${L.toFixed(2)} mm`;
-      $('Nturns').textContent = `Number of turns (calculated for ${segments} segments): ${Nturns.toFixed(2)}`;
-      $('Nturns_from_length').textContent = `N turns (calculated for ${(segments_from_length ?? segments)} segments): ${Nturns_from_length.toFixed(2)}`;
-      $('loose').textContent = `Is the Helix loose enough? ${loose_enough ? 'Yes!' : 'No :('}`;
-      $('wide').textContent = `Is the Helix wide enough (diameter large enough)? ${wide_enough ? 'Yes :)' : 'No :('}`;
+    function changeValue(id, delta) {
+      const el = document.getElementById(id);
+      el.value = parseFloat(el.value) + delta;
     }
 
-    // Wire events
-    ['outer-length','cut-angle','pipe-diameter','twist-angle','length','segments','double_helix']
-      .forEach(id => $(''+id).addEventListener('input', update));
+    function calcHelices() {
+      const outerLength = parseFloat(document.getElementById('outerLength').value);
+      const cutAngle = parseFloat(document.getElementById('cutAngle').value);
+      const pipeDiameterInches = parseFloat(document.getElementById('pipeDiameter').value);
+      const desiredLength = parseFloat(document.getElementById('desiredLength').value);
 
-    window.addEventListener('resize', ()=>Plotly.Plots.resize('helix-plot'));
+      // Convert units and parameters
+      const pipeDiameter = pipeDiameterInches * 25.4; // inches → mm
+      const theta = cutAngle * 2;                     // cutAngle corresponds to theta/2
+      const L = H.center_length_from_outer(outerLength, cutAngle, pipeDiameter);
 
-    // Initial update after helpers are loaded
-    window.addEventListener('load', update);
+      const results = H.list_possible_helices(L, theta, pipeDiameter, desiredLength);
+      const container = document.getElementById('results');
+      container.innerHTML = "";
+
+      if (!results.length) {
+        container.innerHTML = "<p>No valid helices found for these parameters.</p>";
+        return;
+      }
+
+      results.forEach(row => {
+        const [tau, Nsegments, actualLength, Nturns, outer_diameter, donut_hole, deltaz, turns_per_segment] = row;
+        const div = document.createElement('div');
+        div.className = 'result-card';
+        div.innerHTML = `
+          <b>Twist angle:</b> ${tau.toFixed(2)}°<br>
+          <b>Segments:</b> ${Nsegments}<br>
+          <b>Length:</b> ${actualLength.toFixed(1)} mm<br>
+          <b>Turns:</b> ${Nturns.toFixed(2)}<br>
+          <b>Outer diameter:</b> ${outer_diameter.toFixed(1)} mm
+          <br><br>
+          <button onclick="visualize(${L}, ${theta}, ${tau}, ${Nsegments}, ${pipeDiameter})">Visualize</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function visualize(L, theta, tau, segments, pipeDiameter) {
+      const params = new URLSearchParams({ L, theta, tau, segments, pipeDiameter });
+      window.open('visualize.html?' + params.toString(), '_blank');
+    }
+
+    document.getElementById('calcBtn').addEventListener('click', calcHelices);
   </script>
 </body>
 </html>
