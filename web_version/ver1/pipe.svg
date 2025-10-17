@@ -8,17 +8,31 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="178.69632mm"
-   height="116.9001mm"
-   viewBox="0 0 178.69632 116.9001"
+   height="136.44292mm"
+   viewBox="0 0 178.69632 136.44292"
    version="1.1"
    id="svg8"
    inkscape:version="1.0.1 (3bc2e813f5, 2020-09-07)"
    sodipodi:docname="pipe.svg"
-   inkscape:export-filename="C:\Users\jonas\bitmap.png"
+   inkscape:export-filename="C:\Users\jonas\Desktop\pipe.png"
    inkscape:export-xdpi="300"
    inkscape:export-ydpi="300">
   <defs
      id="defs2">
+    <marker
+       style="overflow:visible"
+       id="marker1964"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1962" />
+    </marker>
     <marker
        style="overflow:visible"
        id="marker1453"
@@ -68,7 +82,8 @@
        refY="0"
        orient="auto"
        inkscape:stockid="Arrow1Mend"
-       inkscape:isstock="true">
+       inkscape:isstock="true"
+       inkscape:collect="always">
       <path
          transform="matrix(-0.4,0,0,-0.4,-4,0)"
          style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
@@ -124,6 +139,34 @@
        width="0.37797618"
        height="5.2916665"
        id="rect878" />
+    <marker
+       style="overflow:visible"
+       id="marker1453-6"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(0.4,0,0,0.4,4,0)"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1451-5" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker1289-5"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path1287-3" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -133,8 +176,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="376.75959"
-     inkscape:cy="247.32797"
+     inkscape:cx="280.92961"
+     inkscape:cy="320.85925"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -161,9 +204,9 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-16.107245,-57.270848)">
+     transform="translate(-16.107245,-37.728033)">
     <rect
-       style="fill:#f9f9f9;stroke:#000000;stroke-width:1.119;stroke-miterlimit:4;stroke-dasharray:none"
+       style="fill:none;stroke:#000000;stroke-width:1.119;stroke-miterlimit:4;stroke-dasharray:none"
        id="rect839"
        width="90.714287"
        height="86.934525"
@@ -273,5 +316,19 @@
          x="107.15625"
          y="94.872017"><tspan
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:AaBbCc;-inkscape-font-specification:AaBbCc;stroke-width:0.264583">PIPE DIAMETER</tspan></tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker1453-6);marker-end:url(#marker1964)"
+       d="M 18.898803,49.514883 H 189.6371"
+       id="path1449-4" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.05556px;line-height:1.25;font-family:Georgia;-inkscape-font-specification:Georgia;text-align:center;letter-spacing:0px;text-anchor:middle;white-space:pre;inline-size:83.3939;stroke-width:0.264583"
+       x="107.15625"
+       y="94.872017"
+       id="text1685-4"
+       transform="matrix(0.98163602,0,0,0.98163602,6.2662817,-48.822064)"><tspan
+         x="107.15625"
+         y="94.872017"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:7.05556px;font-family:AaBbCc;-inkscape-font-specification:'AaBbCc, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">OUTER LENGTH</tspan></tspan></text>
   </g>
 </svg>
