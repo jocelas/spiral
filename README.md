@@ -1,5 +1,11 @@
-# Spiral or helix project
+# Double helix from pipe segments
 
+A small project that calculates optimal parameters of a intertwined doulbe helix made of pipe segments cut at an angle.
+
+See the web version at [bojanovsky.at/helix](https://bojanovsky.at/helix).
+
+
+## Details
 The testing environments of the calculation can be seen in the [Python Notebook](Joint_face_normal_method.ipynb).
 All the finished and somewhat working functions are in the file [helper_funcitons.py](helper_functions.py).
 
